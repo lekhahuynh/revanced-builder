@@ -13,7 +13,8 @@ let ws;
  */
 async function overWriteJarNames(fileName) {
   const filePath = joinPath(global.revancedDir, fileName);
-  if (fileName.includes('revanced-cli')) global.jarNames.cli = filePath;
+  if (fileName.includes('revanced-cli') && fileName.endsWith('.jar'))
+    global.jarNames.cli = filePath;
 
   if (fileName.includes('revanced-patches') && fileName.endsWith('.jar'))
     global.jarNames.patchesJar = filePath;

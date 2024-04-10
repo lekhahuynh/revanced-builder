@@ -31,9 +31,11 @@ module.exports = async function getPatches(ws) {
   const list = [];
 
   for (const patches of patchesList) {
-    for (const packages of patches.compatiblePackages) {
-      if (!appsList.some((el) => el.pname === packages.name))
-        appsList.push({ pname: packages.name });
+    if (Array.isArray(patches.compatiblePackages)) {
+      for (const packages of patches.compatiblePackages) {
+        if (!appsList.some((el) => el.pname === packages.name))
+          appsList.push({ pname: packages.name });
+      }
     }
   }
 

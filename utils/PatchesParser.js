@@ -30,16 +30,24 @@ module.exports = async function parsePatch(packageName, hasRoot) {
     /** @type {string} */
     let compatibleVersion;
 
-    for (const pkg of patch.compatiblePackages)
-      if (pkg.name === packageName) {
-        isCompatible = true;
+    if (!patch.compatiblePackages) {
+      console.log(patch);
+      continue;
+    }
 
-        if (pkg.versions.length !== 0) {
-          compatibleVersion = pkg.versions.at(-1);
+    if (Array.isArray(patch.compatiblePackages)) {
+      for (const pkg of patch.compatiblePackages) {
+        if (pkg.name === packageName) {
+          isCompatible = true;
 
-          global.versions.push(compatibleVersion);
+          if (pkg.versions && pkg.versions.length !== 0) {
+            compatibleVersion = pkg.versions.at(-1);
+
+            global.versions.push(compatibleVersion);
+          }
         }
       }
+    }
 
     if (!isCompatible) {
       if (patch.compatiblePackages.length !== 0) continue;
@@ -47,19 +55,17 @@ module.exports = async function parsePatch(packageName, hasRoot) {
 
     if (isRooted && !hasRoot) continue;
 
-    for (const dependencyName of patch.dependencies) {
-      if (dependencyName.includes('integrations')) {
-        global.jarNames.patch.integrations = true;
-      } else {
-        if (!global.jarNames.patch.integrations) {
-          global.jarNames.patch.integrations = false;
-        }
+    if (patch.requiresIntegrations) {
+      global.jarNames.patch.integrations = true;
+    } else {
+      if (!global.jarNames.patch.integrations) {
+        global.jarNames.patch.integrations = false;
       }
     }
 
     patches.push({
       name: patch.name,
-      description: patch.description,
+      description: patch.description || '',
       maxVersion: compatibleVersion || ' ',
       isRooted,
       excluded: patch.excluded || patch.deprecated

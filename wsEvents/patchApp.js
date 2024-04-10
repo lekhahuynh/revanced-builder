@@ -154,15 +154,14 @@ module.exports = async function patchApp(ws) {
   const args = [
     '-jar',
     global.jarNames.cli,
+    'patch',
     '-b',
     global.jarNames.patchesJar,
     '-t',
     './revanced-cache',
-    '--experimental',
-    '-a',
-    `${join(global.revancedDir, global.jarNames.selectedApp.packageName)}.apk`,
     '-o',
-    join(global.revancedDir, 'revanced.apk')
+    join(global.revancedDir, 'revanced.apk'),
+    join(global.revancedDir, `${global.jarNames.selectedApp.packageName}.apk`)
   ];
 
   if (process.platform === 'android') {
@@ -170,7 +169,7 @@ module.exports = async function patchApp(ws) {
     args.push(join(global.revancedDir, 'aapt2'));
   }
 
-  if (global.jarNames.patch.integrations) {
+  if (global.jarNames.patch.integrations || true) {
     args.push('-m');
     args.push(global.jarNames.integrations);
   }
@@ -178,6 +177,13 @@ module.exports = async function patchApp(ws) {
   args.push(...global.jarNames.patches.split(' '));
 
   const buildProcess = spawn(global.javaCmd, args);
+
+  ws.send(
+    JSON.stringify({
+      event: 'patchLog',
+      log: args.join(' ')
+    })
+  );
 
   buildProcess.stdout.on('data', async (data) => {
     ws.send(
@@ -187,7 +193,7 @@ module.exports = async function patchApp(ws) {
       })
     );
 
-    if (data.toString().includes('Finished')) await afterBuild(ws);
+    if (data.toString().includes('Saved to')) await afterBuild(ws);
 
     if (data.toString().includes('INSTALL_FAILED_UPDATE_INCOMPATIBLE')) {
       await reinstallReVanced(ws);
@@ -205,7 +211,7 @@ module.exports = async function patchApp(ws) {
       })
     );
 
-    if (data.toString().includes('Finished')) await afterBuild(ws);
+    if (data.toString().includes('Saved to')) await afterBuild(ws);
 
     if (data.toString().includes('INSTALL_FAILED_UPDATE_INCOMPATIBLE')) {
       await reinstallReVanced(ws);
